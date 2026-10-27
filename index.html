@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>ANAYA · XVII — A Little Universe of Her Own</title>
+<meta name="description" content="A private celestial celebration for Anaya's 17th birthday — 28 October.">
+<meta name="theme-color" content="#070609">
+<meta property="og:title" content="ANAYA · XVII">
+<meta property="og:description" content="A little universe of her own. Happy 17th Birthday, Anaya.">
+<meta property="og:type" content="website">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Jost:wght@200;300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --obsidian:#070609;--burgundy:#200916;--plum:#160B19;
+  --rose:#C99A83;--champagne:#F0DCC0;--ivory:#F7F0EA;
+  --serif:'Cormorant Garamond',Georgia,serif;
+  --caps:'Cinzel',Georgia,serif;
+  --sans:'Jost','Segoe UI',sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+html,body{background:var(--obsidian);color:var(--ivory);font-family:var(--serif);overflow-x:hidden}
+body.locked{overflow:hidden;height:100vh}
+::selection{background:rgba(201,154,131,.35);color:var(--ivory)}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:#0a0810}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--rose),#5a3244);border-radius:3px}
+canvas#sky{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.grain{position:fixed;inset:0;z-index:60;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E")}
+.vignette{position:fixed;inset:0;z-index:1;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 42%,transparent 40%,rgba(7,6,9,.55) 78%,rgba(7,6,9,.92) 100%)}
+
+/* ---------- cursor ---------- */
+.cur-dot,.cur-ring{position:fixed;top:0;left:0;z-index:100;pointer-events:none;border-radius:50%;transform:translate(-50%,-50%)}
+.cur-dot{width:5px;height:5px;background:var(--champagne)}
+.cur-ring{width:34px;height:34px;border:1px solid rgba(201,154,131,.55);transition:width .3s,height .3s,border-color .3s,background .3s}
+.cur-ring.grow{width:56px;height:56px;border-color:rgba(240,220,192,.8);background:rgba(240,220,192,.06)}
+@media(hover:none),(pointer:coarse){.cur-dot,.cur-ring{display:none}}
+
+/* ---------- shared ---------- */
+.scene{position:relative;z-index:3;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:7rem 1.5rem;text-align:center}
+.chapter{font-family:var(--sans);font-weight:200;letter-spacing:.6em;text-transform:uppercase;font-size:.62rem;color:var(--rose);display:flex;align-items:center;gap:1.1rem;opacity:.9}
+.chapter::before,.chapter::after{content:"";width:36px;height:1px;background:linear-gradient(to right,transparent,var(--rose));opacity:.55}
+.chapter::after{background:linear-gradient(to left,transparent,var(--rose))}
+.h-serif{font-family:var(--caps);font-weight:500;font-size:clamp(1.7rem,5.4vw,2.8rem);letter-spacing:.2em;color:var(--champagne);margin-top:1.2rem}
+.hairline{width:1px;height:52px;background:linear-gradient(to bottom,transparent,var(--rose),transparent);margin:1.4rem auto;opacity:.6}
+.btn{font-family:var(--sans);font-weight:400;letter-spacing:.4em;text-transform:uppercase;font-size:.7rem;color:var(--champagne);
+  background:transparent;border:1px solid rgba(201,154,131,.45);padding:1.05rem 2.6rem;cursor:pointer;position:relative;overflow:hidden;
+  transition:color .5s,border-color .5s;border-radius:2px}
+.btn::before{content:"";position:absolute;inset:0;background:linear-gradient(105deg,rgba(201,154,131,0),rgba(201,154,131,.22),rgba(240,220,192,0));
+  transform:translateX(-110%);transition:transform .8s cubic-bezier(.22,1,.36,1)}
+.btn:hover::before,.btn:active::before{transform:translateX(110%)}
+.btn:hover{border-color:var(--rose);color:var(--ivory)}
+.fade-up{opacity:0;transform:translateY(34px);transition:opacity 1.2s cubic-bezier(.22,1,.36,1),transform 1.2s cubic-bezier(.22,1,.36,1)}
+.fade-up.in{opacity:1;transform:translateY(0)}
+
+/* ---------- preloader + intro ---------- */
+#intro{position:fixed;inset:0;z-index:80;background:radial-gradient(ellipse at 50% 45%,#160B19 0%,#0b0710 55%,#070609 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;padding:2rem;text-align:center;
+  transition:opacity 1.4s ease,visibility 1.4s}
+#intro.gone{opacity:0;visibility:hidden;pointer-events:none}
+.orb{position:relative;width:min(52vw,230px);height:min(52vw,230px);margin-bottom:3rem;will-change:transform}
+.orb-core{position:absolute;inset:32%;border-radius:50%;
+  background:radial-gradient(circle at 38% 32%,#f6e3cb 0%,#d8ac8e 28%,#6e3a4e 62%,#1a0d1c 100%);
+  box-shadow:0 0 60px 8px rgba(201,154,131,.28),0 0 140px 30px rgba(120,60,80,.18);
+  animation:coreBreath 6s ease-in-out infinite}
+@keyframes coreBreath{0%,100%{transform:scale(1)}50%{transform:scale(1.045)}}
+.ring{position:absolute;inset:0;border-radius:50%;border:1px solid rgba(240,220,192,.35);
+  transform:rotateX(72deg);animation:spin 14s linear infinite}
+.ring.r2{inset:8%;border-color:rgba(201,154,131,.3);animation:spin2 22s linear infinite}
+.ring.r3{inset:-7%;border-color:rgba(240,220,192,.16);animation:spin3 30s linear infinite}
+@keyframes spin{to{transform:rotateX(72deg) rotateZ(360deg)}}
+@keyframes spin2{to{transform:rotateX(66deg) rotateZ(-360deg)}}
+@keyframes spin3{to{transform:rotateX(78deg) rotateZ(360deg)}}
+#introLine{font-size:clamp(1.35rem,4.6vw,2.3rem);font-style:italic;font-weight:400;color:var(--champagne);
+  max-width:24ch;line-height:1.6;min-height:4.5em;transition:opacity 1s ease}
+#introLine span{opacity:0;filter:blur(8px);display:inline-block;transform:translateY(10px);
+  transition:opacity 1s ease,filter 1s ease,transform 1s cubic-bezier(.22,1,.36,1)}
+#introLine span.on{opacity:1;filter:blur(0);transform:none}
+#introBtns{margin-top:3rem;display:flex;flex-direction:column;align-items:center;gap:1.1rem;
+  opacity:0;transform:translateY(16px);transition:opacity 1s ease .2s,transform 1s ease .2s;pointer-events:none}
+#introBtns.on{opacity:1;transform:none;pointer-events:auto}
+.skip{background:none;border:none;font-family:var(--sans);font-size:.62rem;letter-spacing:.45em;text-transform:uppercase;color:rgba(247,240,234,.4);cursor:pointer;padding:.8rem;transition:color .4s}
+.skip:hover{color:var(--rose)}
+
+/* ---------- side nav ---------- */
+#dots{position:fixed;right:1.1rem;top:50%;transform:translateY(-50%);z-index:50;display:none;flex-direction:column;gap:1rem}
+@media(min-width:820px){#dots{display:flex}}
+#dots a{position:relative;width:8px;height:8px;border-radius:50%;border:1px solid rgba(201,154,131,.6);transition:background .4s,transform .4s;display:block}
+#dots a.on{background:var(--rose);transform:scale(1.3)}
+#dots a span{position:absolute;right:20px;top:50%;transform:translateY(-50%) translateX(8px);white-space:nowrap;
+  font-family:var(--sans);font-size:.58rem;letter-spacing:.4em;text-transform:uppercase;color:var(--champagne);
+  opacity:0;transition:opacity .35s,transform .35s;pointer-events:none}
+#dots a:hover span{opacity:.9;transform:translateY(-50%)}
+
+/* ---------- hero ---------- */
+.hero-name{font-family:var(--caps);font-weight:500;font-size:clamp(4.4rem,17.5vw,13.5rem);letter-spacing:.14em;line-height:1;
+  background:linear-gradient(175deg,#f9efe2 15%,#e8c3a5 40%,#C99A83 58%,#8a5f63 80%,#e9d3b8 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 34px rgba(201,154,131,.22));margin:1rem 0 .4rem;will-change:transform}
+.hero-name .ltr{display:inline-block;opacity:0;transform:translateY(70px) rotate(5deg);transition:opacity 1.1s cubic-bezier(.22,1,.36,1),transform 1.1s cubic-bezier(.22,1,.36,1)}
+.hero-name.play .ltr{opacity:1;transform:none}
+.hero-sub{font-style:italic;font-size:clamp(1.1rem,3.4vw,1.75rem);color:rgba(240,220,192,.85);letter-spacing:.06em}
+.hero-date{margin-top:2.4rem;display:flex;align-items:center;gap:1.4rem;justify-content:center}
+.hero-date .line{width:min(90px,18vw);height:1px;background:linear-gradient(to right,transparent,var(--rose));opacity:.7}
+.hero-date .line:last-child{background:linear-gradient(to left,transparent,var(--rose))}
+.hero-date span{font-family:var(--sans);font-size:.7rem;letter-spacing:.5em;text-transform:uppercase;color:var(--rose)}
+.scroll-cue{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.6rem;opacity:.55}
+.scroll-cue small{font-family:var(--sans);font-size:.58rem;letter-spacing:.45em;text-transform:uppercase;color:var(--champagne)}
+.scroll-cue .dot{width:4px;height:4px;border-radius:50%;background:var(--rose);animation:fall 2.2s ease-in-out infinite}
+@keyframes fall{0%{transform:translateY(-8px);opacity:0}40%{opacity:1}100%{transform:translateY(10px);opacity:0}}
+
+/* ---------- countdown ---------- */
+#countdown{padding:5rem 1.5rem}
+.cd-frame{border:1px solid rgba(201,154,131,.3);padding:clamp(2rem,6vw,3.4rem) clamp(1.4rem,6vw,4rem);position:relative;background:linear-gradient(165deg,rgba(32,9,22,.4),rgba(10,6,12,.55))}
+.cd-frame::before{content:"";position:absolute;inset:9px;border:1px solid rgba(240,220,192,.1);pointer-events:none}
+.cd-grid{display:flex;gap:clamp(1rem,5vw,3rem);justify-content:center;flex-wrap:wrap;margin-top:2rem}
+.cd-cell{min-width:72px}
+.cd-num{font-family:var(--caps);font-size:clamp(2.2rem,8vw,3.6rem);color:var(--champagne);
+  text-shadow:0 0 26px rgba(201,154,131,.3);font-variant-numeric:tabular-nums}
+.cd-lab{font-family:var(--sans);font-size:.56rem;letter-spacing:.5em;text-transform:uppercase;color:var(--rose);margin-top:.5rem}
+#cdNote{margin-top:1.8rem;font-style:italic;color:rgba(240,220,192,.7);font-size:1.05rem}
+
+/* ---------- marquee ---------- */
+.marquee{position:relative;z-index:3;overflow:hidden;border-top:1px solid rgba(201,154,131,.25);border-bottom:1px solid rgba(201,154,131,.25);
+  padding:1.1rem 0;background:rgba(10,6,12,.4);backdrop-filter:blur(3px)}
+.marquee-track{display:flex;gap:3.5rem;width:max-content;animation:mq 30s linear infinite}
+.marquee-track span{font-family:var(--caps);font-size:.85rem;letter-spacing:.5em;color:rgba(240,220,192,.55);white-space:nowrap}
+.marquee-track i{color:var(--rose);font-style:normal}
+@keyframes mq{to{transform:translateX(-50%)}}
+
+/* ---------- letter ---------- */
+#letter{max-width:760px;margin:0 auto}
+.envelope{width:min(340px,80vw);aspect-ratio:1.5;position:relative;cursor:pointer;margin:2.8rem auto;
+  border:1px solid rgba(201,154,131,.4);border-radius:4px;
+  background:linear-gradient(160deg,#1d0f1c,#120a16);
+  box-shadow:0 30px 70px -20px rgba(0,0,0,.8),inset 0 0 60px rgba(201,154,131,.06);
+  display:flex;align-items:center;justify-content:center;transition:transform .6s cubic-bezier(.22,1,.36,1),box-shadow .6s}
+.envelope:hover{transform:translateY(-6px);box-shadow:0 44px 90px -18px rgba(0,0,0,.85),0 0 50px rgba(201,154,131,.12)}
+.env-flap{position:absolute;inset:0;clip-path:polygon(0 0,100% 0,50% 52%);background:linear-gradient(180deg,#241128,#160B19);border-radius:4px 4px 0 0;transform-origin:top;transition:transform 1s cubic-bezier(.7,0,.3,1)}
+.env-seal{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:58px;height:58px;border-radius:50%;
+  background:radial-gradient(circle at 35% 30%,#e8c3a5,#a06a5f 60%,#4a2438);display:flex;align-items:center;justify-content:center;
+  font-family:var(--caps);color:#1c0d16;font-size:1.3rem;box-shadow:0 6px 18px rgba(0,0,0,.6);transition:opacity .5s,transform .8s}
+.envelope.open .env-flap{transform:rotateX(180deg)}
+.envelope.open .env-seal{opacity:0;transform:translate(-50%,-50%) scale(.4) rotate(40deg)}
+.env-label{position:relative;z-index:2;font-family:var(--sans);font-size:.6rem;letter-spacing:.5em;text-transform:uppercase;color:var(--champagne);opacity:.75;transition:opacity .5s}
+.envelope.open .env-label{opacity:0}
+.letter-body{max-height:0;overflow:hidden;transition:max-height 1.8s cubic-bezier(.22,1,.36,1)}
+.letter-body.open{max-height:2600px}
+.letter-inner{margin-top:3rem;padding:clamp(1.8rem,5vw,3.4rem);text-align:left;position:relative;
+  border:1px solid rgba(201,154,131,.28);border-radius:3px;
+  background:linear-gradient(170deg,rgba(32,9,22,.55),rgba(12,7,14,.7));
+  box-shadow:inset 0 0 80px rgba(201,154,131,.05)}
+.letter-inner::before{content:"";position:absolute;top:10px;left:10px;right:10px;bottom:10px;border:1px solid rgba(240,220,192,.12);pointer-events:none}
+.letter-inner p{font-size:clamp(1.08rem,2.9vw,1.32rem);line-height:1.95;color:rgba(247,240,234,.9);margin-bottom:1.4rem;font-weight:400;
+  opacity:0;transform:translateY(14px);transition:opacity .9s ease,transform .9s cubic-bezier(.22,1,.36,1)}
+.letter-body.open .letter-inner p{opacity:1;transform:none}
+.letter-inner p.sig{font-family:var(--caps);color:var(--rose);letter-spacing:.12em;font-size:1rem;text-align:right;margin-top:2rem}
+.rose-mark{color:var(--rose)}
+
+/* ---------- wishes ---------- */
+#wishes .wish-grid{display:grid;grid-template-columns:1fr;gap:1.2rem;width:min(920px,100%);margin-top:3rem;perspective:1200px}
+@media(min-width:760px){#wishes .wish-grid{grid-template-columns:repeat(6,1fr)}
+ .wish:nth-child(1){grid-column:1/4}.wish:nth-child(2){grid-column:4/7}
+ .wish:nth-child(3){grid-column:1/3}.wish:nth-child(4){grid-column:3/5}.wish:nth-child(5){grid-column:5/7}}
+.wish{border:1px solid rgba(201,154,131,.3);border-radius:3px;padding:2rem 1.6rem;cursor:pointer;position:relative;overflow:hidden;
+  background:linear-gradient(160deg,rgba(32,9,22,.4),rgba(10,6,12,.6));min-height:150px;
+  display:flex;flex-direction:column;justify-content:center;gap:.7rem;text-align:left;
+  transition:border-color .5s,transform .18s ease-out;transform-style:preserve-3d;will-change:transform}
+.wish:hover{border-color:rgba(240,220,192,.55)}
+.wish::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--mx,50%) var(--my,50%),rgba(240,220,192,.1),transparent 60%);opacity:0;transition:opacity .5s}
+.wish:hover::after{opacity:1}
+.wish .num{font-family:var(--caps);color:rgba(201,154,131,.65);font-size:.8rem;letter-spacing:.4em}
+.wish .ttl{font-family:var(--caps);font-size:clamp(1.05rem,2.6vw,1.35rem);letter-spacing:.22em;color:var(--champagne)}
+.wish .msg{font-style:italic;font-size:clamp(.98rem,2.4vw,1.12rem);line-height:1.75;color:rgba(247,240,234,.82);
+  max-height:0;opacity:0;overflow:hidden;transition:max-height .9s cubic-bezier(.22,1,.36,1),opacity .9s .1s}
+.wish.open .msg{max-height:240px;opacity:1}
+.wish .plus{position:absolute;top:1.1rem;right:1.2rem;font-family:var(--sans);color:var(--rose);font-weight:300;font-size:1.1rem;transition:transform .6s cubic-bezier(.22,1,.36,1)}
+.wish.open .plus{transform:rotate(45deg)}
+.wish.open{border-color:rgba(240,220,192,.5)}
+
+/* ---------- constellation interlude ---------- */
+#stars{padding:6rem 1.5rem}
+#starCanvas{width:min(680px,92vw);height:300px;cursor:pointer;display:block;margin:2.4rem auto 0;
+  border:1px solid rgba(201,154,131,.25);border-radius:3px;background:rgba(10,6,12,.4)}
+#stars p.hint{font-family:var(--sans);font-size:.6rem;letter-spacing:.45em;text-transform:uppercase;color:rgba(240,220,192,.5);margin-top:1.2rem}
+
+/* ---------- finale ---------- */
+#finale .fin-name{font-family:var(--caps);font-weight:500;font-size:clamp(3.4rem,13vw,9.5rem);letter-spacing:.16em;line-height:1;
+  background:linear-gradient(175deg,#f9efe2 15%,#e8c3a5 45%,#C99A83 65%,#e9d3b8 100%);-webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 40px rgba(201,154,131,.25))}
+#finale .fin-lines{margin-top:2.2rem;display:flex;flex-direction:column;gap:1rem}
+#finale .fin-lines p{font-style:italic;font-size:clamp(1.1rem,3.2vw,1.6rem);color:rgba(240,220,192,.88)}
+#secretStar{position:absolute;bottom:2.2rem;right:2rem;width:44px;height:44px;border:none;background:none;cursor:pointer;opacity:.35;transition:opacity .5s,transform .5s;z-index:5}
+#secretStar:hover{opacity:.9;transform:scale(1.15) rotate(20deg)}
+#secretStar svg{width:100%;height:100%;filter:drop-shadow(0 0 8px rgba(240,220,192,.5));animation:twinkle 3.4s ease-in-out infinite}
+@keyframes twinkle{0%,100%{opacity:.55}50%{opacity:1}}
+#secret{position:fixed;inset:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:1.5rem;
+  background:radial-gradient(ellipse at 50% 40%,rgba(240,220,192,.14),rgba(7,6,9,.96) 70%);
+  opacity:0;visibility:hidden;transition:opacity 1.2s ease,visibility 1.2s}
+#secret.on{opacity:1;visibility:visible}
+#secret .panel{max-width:620px;text-align:center;transform:scale(.92);transition:transform 1.3s cubic-bezier(.22,1,.36,1)}
+#secret.on .panel{transform:scale(1)}
+#secret p{font-style:italic;font-size:clamp(1.05rem,3vw,1.35rem);line-height:2;color:var(--ivory);margin-bottom:1.3rem}
+#secret .dedic{font-family:var(--caps);letter-spacing:.35em;font-size:.78rem;color:var(--rose);text-transform:uppercase;margin-top:2.2rem;line-height:2.2}
+#secret .close{margin-top:2.6rem}
+.glow-wash{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at 50% 55%,rgba(240,220,192,.16),transparent 65%);opacity:0;transition:opacity 2s}
+.glow-wash.on{opacity:1}
+
+/* ---------- chrome ---------- */
+#musicBtn{position:fixed;top:1.1rem;right:1.1rem;z-index:75;width:44px;height:44px;border-radius:50%;
+  border:1px solid rgba(201,154,131,.4);background:rgba(12,7,14,.55);backdrop-filter:blur(6px);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:border-color .4s}
+#musicBtn:hover{border-color:var(--rose)}
+#musicBtn svg{width:18px;height:18px;stroke:var(--champagne);fill:none;stroke-width:1.4;stroke-linecap:round}
+#musicBtn .waves{opacity:0;transition:opacity .4s}
+#musicBtn.playing .waves{opacity:1}
+#musicBtn.playing .mute{opacity:0}
+#musicBtn .mute{transition:opacity .4s}
+#credit{position:relative;z-index:3;text-align:center;padding:2.2rem 1rem 2.8rem;font-family:var(--sans);font-size:.56rem;letter-spacing:.5em;text-transform:uppercase;color:rgba(247,240,234,.28)}
+main{position:relative;z-index:3;opacity:0;transition:opacity 1.6s ease}
+main.on{opacity:1}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.2s!important;scroll-behavior:auto!important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body class="locked">
+
+<canvas id="sky"></canvas>
+<div class="vignette"></div>
+<div class="grain"></div>
+<div class="glow-wash" id="glowWash"></div>
+<div class="cur-dot" id="curDot"></div>
+<div class="cur-ring" id="curRing"></div>
+
+<!-- SCENE 1 -->
+<div id="intro">
+  <div class="orb" id="orb"><div class="ring r1"></div><div class="ring r2"></div><div class="ring r3"></div><div class="orb-core"></div></div>
+  <p id="introLine"></p>
+  <div id="introBtns">
+    <button class="btn" id="enterBtn">Enter My Universe</button>
+    <button class="skip" id="skipBtn">Skip Intro</button>
+  </div>
+</div>
+
+<nav id="dots" aria-label="Chapters">
+  <a href="#hero" data-sec="hero"><span>Her Universe</span></a>
+  <a href="#letter" data-sec="letter"><span>The Letter</span></a>
+  <a href="#wishes" data-sec="wishes"><span>Five Wishes</span></a>
+  <a href="#finale" data-sec="finale"><span>The Finale</span></a>
+</nav>
+
+<button id="musicBtn" aria-label="Toggle music" title="Music">
+  <svg viewBox="0 0 24 24"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+  <g class="waves"><path d="M2 12h1M3.5 9h1M3.5 15h1"/></g><g class="mute"><path d="M2 9l5 6M7 9l-5 6"/></g></svg>
+</button>
+
+<main id="main">
+
+  <!-- SCENE 2 : HERO -->
+  <section class="scene" id="hero">
+    <p class="chapter fade-up">Chapter One</p>
+    <h1 class="hero-name" id="heroName" aria-label="ANAYA"></h1>
+    <p class="hero-sub fade-up">A little universe of her own</p>
+    <div class="hero-date fade-up"><div class="line"></div><span>Happy 17th Birthday · 28 October</span><div class="line"></div></div>
+    <div class="scroll-cue fade-up"><small>Scroll</small><div class="dot"></div></div>
+  </section>
+
+  <!-- COUNTDOWN -->
+  <section class="scene" id="countdown" style="min-height:auto">
+    <p class="chapter fade-up">Interlude</p>
+    <h2 class="h-serif fade-up" style="font-size:clamp(1.3rem,4vw,2rem)">The Final Hours</h2>
+    <div class="cd-frame fade-up">
+      <div class="cd-grid" id="cdGrid">
+        <div class="cd-cell"><div class="cd-num" id="cdD">00</div><div class="cd-lab">Days</div></div>
+        <div class="cd-cell"><div class="cd-num" id="cdH">00</div><div class="cd-lab">Hours</div></div>
+        <div class="cd-cell"><div class="cd-num" id="cdM">00</div><div class="cd-lab">Minutes</div></div>
+        <div class="cd-cell"><div class="cd-num" id="cdS">00</div><div class="cd-lab">Seconds</div></div>
+      </div>
+      <p id="cdNote">…until Anaya's day begins.</p>
+    </div>
+  </section>
+
+  <div class="marquee" aria-hidden="true"><div class="marquee-track" id="mqTrack">
+    <span>ANAYA <i>✦</i> SEVENTEEN <i>✦</i> 28 OCTOBER <i>✦</i> A LITTLE UNIVERSE OF HER OWN <i>✦</i> HAPPY BIRTHDAY <i>✦</i>&nbsp;</span>
+  </div></div>
+
+  <!-- SCENE 3 : LETTER -->
+  <section class="scene" id="letter">
+    <p class="chapter fade-up">Chapter Two</p>
+    <h2 class="h-serif fade-up">A Letter From The Heart</h2>
+    <div class="envelope fade-up" id="envelope" role="button" tabindex="0" aria-label="Open the letter">
+      <div class="env-flap"></div><div class="env-seal">A</div><span class="env-label">Open My Letter</span>
+    </div>
+    <button class="btn fade-up" id="readAll">Read All</button>
+    <div class="letter-body" id="letterBody">
+      <div class="letter-inner">
+        <p>Happy 17th Birthday, Anaya. <span class="rose-mark">❤</span></p>
+        <p>It's a beautiful thing how two people can meet through a screen and still become meaningful parts of each other's lives.</p>
+        <p>I'm genuinely glad our paths crossed. I hope this new chapter brings you peaceful days, unexpected happiness, beautiful opportunities, and people who appreciate the person you are.</p>
+        <p>Never feel that you have to be someone else to deserve kindness. Keep growing, keep dreaming, and keep being yourself.</p>
+        <p>I hope today reminds you that your existence can bring a little more happiness into someone else's world.</p>
+        <p>Thank you for being my friend.</p>
+        <p>May your 17th year become a chapter worth remembering.</p>
+        <p>Happy Birthday, Anaya. <span class="rose-mark">🥀</span></p>
+        <p class="sig">— Your Friend</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SCENE 4 : WISHES -->
+  <section class="scene" id="wishes">
+    <p class="chapter fade-up">Chapter Three</p>
+    <h2 class="h-serif fade-up">Five Little Wishes</h2>
+    <div class="wish-grid">
+      <div class="wish fade-up" tabindex="0"><span class="plus">+</span><span class="num">01</span><span class="ttl">Happiness</span><span class="msg">May you find happiness in the smallest moments and peace even on difficult days.</span></div>
+      <div class="wish fade-up" tabindex="0"><span class="plus">+</span><span class="num">02</span><span class="ttl">Courage</span><span class="msg">May you always find the courage to follow your dreams and become the person you want to be.</span></div>
+      <div class="wish fade-up" tabindex="0"><span class="plus">+</span><span class="num">03</span><span class="ttl">Success</span><span class="msg">May new opportunities find you, and may your hard work take you closer to everything you hope to achieve.</span></div>
+      <div class="wish fade-up" tabindex="0"><span class="plus">+</span><span class="num">04</span><span class="ttl">Beautiful Surprises</span><span class="msg">May life surprise you with moments so beautiful that you remember them for years.</span></div>
+      <div class="wish fade-up" tabindex="0"><span class="plus">+</span><span class="num">05</span><span class="ttl">Always Yourself</span><span class="msg">Never forget that you deserve kindness, respect, and the freedom to be completely yourself.</span></div>
+    </div>
+  </section>
+
+  <!-- CONSTELLATION INTERLUDE -->
+  <section class="scene" id="stars" style="min-height:auto">
+    <p class="chapter fade-up">Interlude</p>
+    <h2 class="h-serif fade-up" style="font-size:clamp(1.3rem,4vw,2rem)">A Constellation For Anaya</h2>
+    <canvas id="starCanvas" class="fade-up"></canvas>
+    <p class="hint fade-up">Touch the five sleeping stars in order — left to right</p>
+  </section>
+
+  <!-- SCENE 6 : FINALE -->
+  <section class="scene" id="finale">
+    <p class="chapter fade-up">The Final Frame</p>
+    <h2 class="fin-name fade-up" style="margin-top:1.2rem">ANAYA</h2>
+    <div class="fin-lines">
+      <p class="fade-up">17 years of you.</p>
+      <p class="fade-up">A whole universe of possibilities ahead.</p>
+      <p class="fade-up" style="color:var(--rose)">Happy Birthday. ❤</p>
+    </div>
+    <button class="btn fade-up" id="replay" style="margin-top:3rem">Relive The Universe</button>
+    <p class="fade-up" style="margin-top:2.4rem;font-family:var(--sans);font-size:.6rem;letter-spacing:.5em;text-transform:uppercase;color:rgba(247,240,234,.35)">Something hidden glows nearby — find it</p>
+  </section>
+
+  <p id="credit">Crafted under a midnight sky · For Anaya · MMXXVI</p>
+</main>
+
+<!-- SECRET -->
+<button id="secretStar" aria-label="A hidden star">
+  <svg viewBox="0 0 24 24"><path d="M12 1l2.6 7.2L22 9.3l-5.8 5 1.8 7.7L12 17.8 6 22l1.8-7.7L2 9.3l7.4-1.1z" fill="#F0DCC0"/></svg>
+</button>
+<div id="secret" role="dialog" aria-modal="true">
+  <div class="panel">
+    <div class="hairline"></div>
+    <p>If this little universe makes you smile, then it has already fulfilled its purpose.</p>
+    <p>Happy 17th Birthday, Anaya.</p>
+    <p>May your world become kinder, your dreams become bigger, and your days become filled with reasons to smile.</p>
+    <p>Thank you for being part of my world.</p>
+    <p class="dedic">This little universe was made just for your special day</p>
+    <button class="btn close" id="secretClose">Return To The Stars</button>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var reduce=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+var DPR=Math.min(window.devicePixelRatio||1,2);
+
+/* ============ STARFIELD CANVAS ============ */
+var cv=document.getElementById("sky"),cx=cv.getContext("2d"),W,H,stars=[],rings=[],shoot=[],mx=0,my=0,tx=0,ty=0;
+function resize(){W=cv.width=window.innerWidth*DPR;H=cv.height=window.innerHeight*DPR;
+  cv.style.width=window.innerWidth+"px";cv.style.height=window.innerHeight+"px";}
+resize();window.addEventListener("resize",resize);
+function initStars(){stars=[];var n=Math.min(170,Math.floor(window.innerWidth/6));
+  for(var i=0;i<n;i++)stars.push({x:Math.random()*W,y:Math.random()*H,r:(Math.random()*1.3+.3)*DPR,
+    a:Math.random()*.6+.15,tw:Math.random()*Math.PI*2,sp:Math.random()*.015+.004,dp:Math.random()*.7+.3,
+    hue:Math.random()<.25?"240,220,192":(Math.random()<.5?"201,154,131":"247,240,234")});}
+initStars();window.addEventListener("resize",initStars);
+(function(){for(var i=0;i<3;i++)rings.push({rot:Math.random()*Math.PI*2,
+  tilt:(.35+i*.14),rad:(.32+i*.1),sp:(.0016-i*.0004)*(i%2?-1:1),parts:26+i*8,off:Math.random()*9});})();
+window.addEventListener("pointermove",function(e){tx=(e.clientX/window.innerWidth-.5);ty=(e.clientY/window.innerHeight-.5);},{passive:true});
+function spawnShoot(){if(reduce)return;
+  var fromLeft=Math.random()<.5,a=fromLeft?Math.PI*.22+Math.random()*.2:Math.PI*.78-Math.random()*.2;
+  shoot.push({x:Math.random()*W*.8+W*.1,y:Math.random()*H*.35,vx:Math.cos(a)*7*DPR,vy:Math.sin(a)*2.2*DPR,life:1});}
+setInterval(spawnShoot,5200);
+function fireBurst(x,y,n){for(var i=0;i<(n||26);i++){var a=Math.random()*Math.PI*2,v=(Math.random()*3+1.5)*DPR;
+  shoot.push({x:x!==undefined?x:W/2,y:y!==undefined?y:H*.42,vx:Math.cos(a)*v,vy:Math.sin(a)*v*.6,life:1});}}
+function loop(){
+  mx+=(tx-mx)*.04;my+=(ty-my)*.04;
+  cx.clearRect(0,0,W,H);
+  var g=cx.createRadialGradient(W/2,H*.42,0,W/2,H*.42,Math.max(W,H)*.7);
+  g.addColorStop(0,"rgba(32,9,22,.35)");g.addColorStop(.5,"rgba(22,11,25,.12)");g.addColorStop(1,"rgba(7,6,9,0)");
+  cx.fillStyle=g;cx.fillRect(0,0,W,H);
+  for(var i=0;i<stars.length;i++){var s=stars[i];s.tw+=s.sp;
+    cx.globalAlpha=s.a*(.55+.45*Math.sin(s.tw));
+    cx.fillStyle="rgb("+s.hue+")";
+    cx.beginPath();cx.arc(s.x+mx*30*DPR*s.dp,s.y+my*30*DPR*s.dp,s.r,0,7);cx.fill();}
+  cx.globalAlpha=1;
+  var cxp=W/2+mx*24*DPR,cyp=H*.42+my*24*DPR,R=Math.min(W,H);
+  for(var k=0;k<rings.length;k++){var rg=rings[k];rg.rot+=rg.sp*(reduce?0.15:1);
+    cx.save();cx.translate(cxp,cyp);cx.rotate(rg.rot);
+    for(var j=0;j<rg.parts;j++){var an=j/rg.parts*Math.PI*2+rg.off;
+      var px=Math.cos(an)*R*rg.rad,py=Math.sin(an)*R*rg.rad*rg.tilt;
+      var depth=(Math.sin(an)+1)/2;
+      cx.globalAlpha=.12+depth*.4;cx.fillStyle=j%5===0?"rgb(240,220,192)":"rgb(201,154,131)";
+      cx.beginPath();cx.arc(px,py,(j%5===0?2.1:1.1)*DPR*(0.6+depth*.6),0,7);cx.fill();}
+    cx.restore();}
+  cx.globalAlpha=1;
+  for(var m=shoot.length-1;m>=0;m--){var sh=shoot[m];sh.x+=sh.vx;sh.y+=sh.vy;sh.life-=.011;
+    if(sh.life<=0){shoot.splice(m,1);continue;}
+    cx.globalAlpha=sh.life*.9;cx.strokeStyle="rgb(240,220,192)";cx.lineWidth=1.2*DPR;
+    cx.beginPath();cx.moveTo(sh.x,sh.y);cx.lineTo(sh.x-sh.vx*6,sh.y-sh.vy*6);cx.stroke();}
+  cx.globalAlpha=1;
+  requestAnimationFrame(loop);
+}
+loop();
+
+/* ============ CURSOR ============ */
+var fine=window.matchMedia&&window.matchMedia("(hover:hover) and (pointer:fine)").matches;
+if(fine&&!reduce){
+  var cd=document.getElementById("curDot"),cr=document.getElementById("curRing"),px=0,py=0,rx=0,ry=0;
+  window.addEventListener("pointermove",function(e){px=e.clientX;py=e.clientY;
+    cd.style.transform="translate("+(px-2.5)+"px,"+(py-2.5)+"px)";},{passive:true});
+  (function cl(){rx+=(px-rx)*.14;ry+=(py-ry)*.14;
+    cr.style.transform="translate("+(rx-17)+"px,"+(ry-17)+"px)";requestAnimationFrame(cl);})();
+  document.querySelectorAll("a,button,.wish,.envelope,#starCanvas").forEach(function(el){
+    el.addEventListener("pointerenter",function(){cr.classList.add("grow");});
+    el.addEventListener("pointerleave",function(){cr.classList.remove("grow");});});
+}else{document.getElementById("curDot").style.display="none";document.getElementById("curRing").style.display="none";}
+
+/* ============ INTRO ============ */
+var intro=document.getElementById("intro"),line=document.getElementById("introLine"),
+    introBtns=document.getElementById("introBtns"),main=document.getElementById("main"),
+    orb=document.getElementById("orb");
+var lines=["Some people enter our lives unexpectedly...","...and make the world a little more beautiful."];
+var li=0,ended=false;
+function showLine(){if(li>=lines.length){introBtns.classList.add("on");return;}
+  line.innerHTML="";var words=lines[li].split(" ");
+  words.forEach(function(w,i){var sp=document.createElement("span");sp.textContent=w+" ";line.appendChild(sp);
+    setTimeout(function(){sp.classList.add("on")},i*130+80);});
+  setTimeout(function(){li++;showLine()},words.length*130+2000);}
+setTimeout(showLine,1000);
+function exitIntro(){if(ended)return;ended=true;intro.classList.add("gone");
+  document.body.classList.remove("locked");main.classList.add("on");
+  playHeroName();setTimeout(function(){fireBurst();},700);}
+document.getElementById("enterBtn").addEventListener("click",exitIntro);
+document.getElementById("skipBtn").addEventListener("click",exitIntro);
+setTimeout(exitIntro,16000);
+window.addEventListener("pointermove",function(e){if(ended)return;
+  var ox=(e.clientX/window.innerWidth-.5)*16,oy=(e.clientY/window.innerHeight-.5)*16;
+  orb.style.transform="translate("+ox+"px,"+oy+"px)";},{passive:true});
+
+/* ============ HERO NAME ============ */
+var heroName=document.getElementById("heroName");
+"ANAYA".split("").forEach(function(ch){var s=document.createElement("span");s.className="ltr";s.textContent=ch;heroName.appendChild(s);});
+function playHeroName(){heroName.classList.add("play");
+  heroName.querySelectorAll(".ltr").forEach(function(el,i){el.style.transitionDelay=(i*.12)+"s";});}
+if(fine&&!reduce){window.addEventListener("pointermove",function(e){
+  var dx=(e.clientX/window.innerWidth-.5),dy=(e.clientY/window.innerHeight-.5);
+  heroName.style.transform="translate("+dx*-14+"px,"+dy*-8+"px)";},{passive:true});}
+
+/* ============ SCROLL REVEALS ============ */
+var io=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add("in");io.unobserve(e.target);}});},{threshold:.15});
+document.querySelectorAll(".fade-up").forEach(function(el){io.observe(el);});
+
+/* ============ SIDE NAV ============ */
+var dotLinks=document.querySelectorAll("#dots a");
+var nio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){dotLinks.forEach(function(a){a.classList.toggle("on",a.getAttribute("data-sec")===e.target.id);});}});},{threshold:.35});
+  e.preventDefault();var t=document.getElementById(a.getAttribute("href").slice(1));
+  if(t)t.scrollIntoView({behavior:reduce?"auto":"smooth"});});});
+var nio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){dotLinks.forEach(function(a){a.classList.toggle("on",a.getAttribute("data-sec")===e.target.id);});}});},{threshold:.35});
+var nio=new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){dotLinks.forEach(function(a){a.classList.toggle("on",a.getAttribute("data-sec")===e.target.id);});}});},{threshold:.35});
+["hero","letter","wishes","finale"].forEach(function(id){nio.observe(document.getElementById(id));});
+
+/* ============ COUNTDOWN ============ */
+function targetDate(){var n=new Date(),t=new Date(n.getFullYear(),9,28,0,0,0);
+  if(n>=new Date(n.getFullYear(),9,29,0,0,0))t=new Date(n.getFullYear()+1,9,28);
+  return t;}
+var tgt=targetDate(),cdNote=document.getElementById("cdNote");
+function pad(v){return (v<10?"0":"")+v;}
+function tick(){var now=new Date(),diff=tgt-now;
+  if(diff<=0){document.getElementById("cdD").textContent="00";document.getElementById("cdH").textContent="00";
+    document.getElementById("cdM").textContent="00";document.getElementById("cdS").textContent="00";
+    cdNote.textContent="It's her day. The universe is celebrating.";return;}
+  var d=Math.floor(diff/864e5),h=Math.floor(diff/36e5)%24,m=Math.floor(diff/6e4)%60,s=Math.floor(diff/1e3)%60;
+  document.getElementById("cdD").textContent=pad(d);document.getElementById("cdH").textContent=pad(h);
+  document.getElementById("cdM").textContent=pad(m);document.getElementById("cdS").textContent=pad(s);}
+tick();setInterval(tick,1000);
+
+/* ============ MARQUEE (duplicate for seamless loop) ============ */
+var mq=document.getElementById("mqTrack");mq.innerHTML+=mq.innerHTML;
+
+/* ============ LETTER ============ */
+var env=document.getElementById("envelope"),letterBody=document.getElementById("letterBody");
+function openLetter(){if(env.classList.contains("open"))return;env.classList.add("open");letterBody.classList.add("open");
+  letterBody.querySelectorAll("p").forEach(function(p,i){p.style.transitionDelay=(0.4+i*.28)+"s";});
+  setTimeout(function(){letterBody.scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"});},600);}
+env.addEventListener("click",openLetter);
+env.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();openLetter();}});
+document.getElementById("readAll").addEventListener("click",openLetter);
+
+/* ============ WISHES (tilt + light) ============ */
+document.querySelectorAll(".wish").forEach(function(w){
+  w.addEventListener("pointermove",function(e){var r=w.getBoundingClientRect();
+    w.style.setProperty("--mx",((e.clientX-r.left)/r.width*100)+"%");
+    w.style.setProperty("--my",((e.clientY-r.top)/r.height*100)+"%");
+    if(fine&&!reduce){var dx=(e.clientX-r.left)/r.width-.5,dy=(e.clientY-r.top)/r.height-.5;
+      w.style.transform="translateY(-4px) rotateY("+(dx*7)+"deg) rotateX("+(-dy*7)+"deg)";}},{passive:true});
+  w.addEventListener("pointerleave",function(){w.style.transform="";});
+  function toggle(){w.classList.toggle("open");}
+  w.addEventListener("click",toggle);
+  w.addEventListener("keydown",function(e){if(e.key==="Enter"||e.key===" "){e.preventDefault();toggle();}});
+});
+
+/* ============ CONSTELLATION (draw an A) ============ */
+var sc=document.getElementById("starCanvas"),scx=sc.getContext("2d"),sw,sh,found=0,done=false;
+var pts=[[.16,.82],[.34,.20],[.50,.52],[.66,.20],[.84,.82]];
+var links=[[0,1],[1,2],[2,3],[3,4],[1,4],[0,3]];
+function scResize(){var r=sc.getBoundingClientRect();sw=sc.width=r.width*DPR;sh=sc.height=300*DPR;}
+scResize();window.addEventListener("resize",scResize);
+var lit=[false,false,false,false,false];
+function drawStar(x,y,r,a){scx.globalAlpha=a;scx.fillStyle="rgb(240,220,192)";
+  scx.beginPath();scx.arc(x,y,r,0,7);scx.fill();
+  if(a>.9){scx.globalAlpha=a*.35;scx.beginPath();scx.arc(x,y,r*3.2,0,7);scx.fillStyle="rgb(201,154,131)";scx.fill();}
+  scx.globalAlpha=1;}
+var twT=0;
+function scLoop(){twT+=.03;scx.clearRect(0,0,sw,sh);
+  for(var i=0;i<links.length;i++){var l=links[i];
+    if(lit[l[0]]&&lit[l[1]]&&!done){scx.strokeStyle="rgba(240,220,192,.5)";scx.lineWidth=1*DPR;
+      scx.beginPath();scx.moveTo(pts[l[0]][0]*sw,pts[l[0]][1]*sh);scx.lineTo(pts[l[1]][0]*sw,pts[l[1]][1]*sh);scx.stroke();}}
+  for(var j=0;j<5;j++){var x=pts[j][0]*sw,y=pts[j][1]*sh;
+    if(lit[j])drawStar(x,y,4*DPR,1);
+    else drawStar(x,y,2.2*DPR,.35+.25*Math.sin(twT+j));}
+  requestAnimationFrame(scLoop);}
+scLoop();
+sc.addEventListener("click",function(e){
+  if(done)return;var r=sc.getBoundingClientRect();
+  var x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;
+  for(var j=0;j<5;j++){var dx=pts[j][0]-x,dy=pts[j][1]-y;
+    if(Math.sqrt(dx*dx+dy*dy)<.09&&!lit[j]){lit[j]=true;found++;
+      fireBurst(r.left*DPR+r.width*DPR*pts[j][0],r.top*DPR+300*DPR*pts[j][1],10);
+      if(found===5){done=true;sc.style.borderColor="rgba(240,220,192,.6)";
+        var hint=document.querySelector("#stars .hint");
+        hint.textContent="✦ The letter A — her initial, written in stars ✦";hint.style.color="var(--rose)";}
+      break;}}});
+
+/* ============ SECRET ============ */
+var secret=document.getElementById("secret"),wash=document.getElementById("glowWash");
+function openSecret(){secret.classList.add("on");wash.classList.add("on");fireBurst();}
+function closeSecret(){secret.classList.remove("on");wash.classList.remove("on");}
+document.getElementById("secretStar").addEventListener("click",openSecret);
+document.getElementById("secretClose").addEventListener("click",closeSecret);
+secret.addEventListener("click",function(e){if(e.target===secret)closeSecret();});
+window.addEventListener("keydown",function(e){if(e.key==="Escape")closeSecret();});
+
+/* ============ REPLAY ============ */
+document.getElementById("replay").addEventListener("click",function(){
+  window.scrollTo({top:0,behavior:"auto"});ended=false;li=0;line.innerHTML="";
+  introBtns.classList.remove("on");intro.classList.remove("gone");
+  document.body.classList.add("locked");main.classList.remove("on");heroName.classList.remove("play");
+  setTimeout(showLine,1200);});
+
+/* ============ GENERATIVE AMBIENT MUSIC ============ */
+var musicBtn=document.getElementById("musicBtn"),actx=null,master=null,playing=false;
+function buildAudio(){
+  actx=new (window.AudioContext||window.webkitAudioContext)();
+  master=actx.createGain();master.gain.value=0;master.connect(actx.destination);
+  var freqs=[110,164.81,220,277.18,329.63];
+  freqs.forEach(function(f,i){
+    var o=actx.createOscillator(),g=actx.createGain();
+    o.type=i<2?"sine":"triangle";o.frequency.value=f;o.detune.value=(Math.random()-.5)*8;
+    g.gain.value=i<2?.05:.022;
+    var lfo=actx.createOscillator(),lg=actx.createGain();
+    lfo.frequency.value=.05+Math.random()*.08;lg.gain.value=g.gain.value*.7;
+    lfo.connect(lg);lg.connect(g.gain);lfo.start();
+    o.connect(g);g.connect(master);o.start();});
+  var len=actx.sampleRate*2,buf=actx.createBuffer(1,len,actx.sampleRate),d=buf.getChannelData(0);
+  for(var i=0;i<len;i++)d[i]=(Math.random()*2-1)*.5;
+  var noise=actx.createBufferSource();noise.buffer=buf;noise.loop=true;
+  var nf=actx.createBiquadFilter();nf.type="lowpass";nf.frequency.value=320;
+  var ng=actx.createGain();ng.gain.value=.012;noise.connect(nf);nf.connect(ng);ng.connect(master);noise.start();}
+musicBtn.addEventListener("click",function(){
+  try{
+    if(!actx)buildAudio();
+    if(actx.state==="suspended")actx.resume();
+    playing=!playing;var t=actx.currentTime;
+    master.gain.cancelScheduledValues(t);
+    master.gain.linearRampToValueAtTime(playing?.14:0,t+2);
+    musicBtn.classList.toggle("playing",playing);
+  }catch(err){musicBtn.style.display="none";}
+});
+})();
+</script>
+</body>
+</html>
